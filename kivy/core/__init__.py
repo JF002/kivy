@@ -61,6 +61,8 @@ def core_select_lib(category, llist, create_instance=False):
             libs_ignored.append(modulename)
             Logger.debug('{0}: Ignored <{1}> (import error)'.format(
                 category.capitalize(), option))
+            Logger.debug('{0}: Import error : {1}'.format(
+                category.capitalize(), e.message))
             Logger.trace('', exc_info=e)
 
         except CoreCriticalException as e:
@@ -76,6 +78,8 @@ def core_select_lib(category, llist, create_instance=False):
             Logger.trace('{0}: Unable to use {1}'.format(
                 category.capitalize(), option, category))
             Logger.trace('', exc_info=e)
+            Logger.debug('{0}: ** error : {1}'.format(
+                category.capitalize(), e.message))
 
     Logger.critical(
         '{0}: Unable to find any valuable {1} provider at all!'.format(

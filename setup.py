@@ -32,7 +32,7 @@ for key in c_options.keys():
 # -----------------------------------------------------------------------------
 # Determine on which platform we are
 
-platform = sys.platform
+platform = 'raspberrypi'
 
 # Detect Python for android project (http://github.com/kivy/python-for-android)
 ndkplatform = environ.get('NDKPLATFORM')
@@ -121,6 +121,8 @@ elif platform == 'win32':
 else:
     # searching GLES headers
     default_header_dirs = ['/usr/include', '/usr/local/include']
+    if platform == "raspberrypi":
+        default_header_dirs.insert(0, '/opt/vc/include')
     found = False
     for hdir in default_header_dirs:
         filename = join(hdir, 'GLES2', 'gl2.h')
@@ -143,6 +145,7 @@ if platform == 'ios':
 
 # -----------------------------------------------------------------------------
 # declare flags
+
 
 def get_modulename_from_file(filename):
     filename = filename.replace(sep, '/')
@@ -179,6 +182,7 @@ def merge(d1, *args):
                 d1[key] = value
     return d1
 
+
 def determine_base_flags():
     flags = {
         'libraries': ['m'],
@@ -191,10 +195,12 @@ def determine_base_flags():
         flags['extra_compile_args'] += ['-isysroot', sysroot]
         flags['extra_link_args'] += ['-isysroot', sysroot]
     elif platform == 'darwin':
-        sysroot = '/System/Library/Frameworks/ApplicationServices.framework/Frameworks'
+        sysroot = ('/System/Library/Frameworks/ApplicationServices.framework/\
+                   Frameworks')
         flags['extra_compile_args'] += ['-F%s' % sysroot]
         flags['extra_link_args'] += ['-F%s' % sysroot]
     return flags
+
 
 def determine_gl_flags():
     flags = {'libraries': []}
@@ -218,6 +224,10 @@ def determine_gl_flags():
         flags['include_dirs'] = [join(ndkplatform, 'usr', 'include')]
         flags['extra_link_args'] = ['-L', join(ndkplatform, 'usr', 'lib')]
         flags['libraries'] = ['GLESv2']
+    elif platform == 'raspberrypi':
+        flags['libraries'] = ['GLESv2']
+        flags['include_dirs'] = ['/opt/vc/include']
+        flags['extra_link_args'] = ['-L', '/opt/vc/lib']
     else:
         flags['libraries'] = ['GL']
     if c_options['use_glew']:
@@ -226,6 +236,7 @@ def determine_gl_flags():
         else:
             flags['libraries'] += ['GLEW']
     return flags
+
 
 def determine_sdl():
     flags = {}
@@ -271,6 +282,7 @@ def determine_sdl():
         flags['extra_link_args'] += [
             '-framework', 'ApplicationServices']
     return flags
+
 
 def determine_graphics_pxd():
     flags = {'depends': [join(dirname(__file__), 'kivy', x) for x in [
@@ -361,13 +373,19 @@ if 'WITH_X11' in environ:
     sources['core/window/window_x11.pyx'] = merge(
         base_flags, gl_flags, graphics_flags, {
             'depends': [join(dirname(__file__),
-                'kivy/core/window/window_x11_core.c')],
+            'kivy/core/window/window_x11_core.c')],
             'libraries': ['Xrender', 'X11', 'm']
         })
 
+if platform == 'raspberrypi':
+    sources['core/window/window_egl_rpi.pyx'] = merge(
+        base_flags, gl_flags, graphics_flags, {
+            'libraries': ['GLESv2', 'GL']
+        })
 
 # -----------------------------------------------------------------------------
 # extension modules
+
 
 def get_extensions_from_sources(sources):
     ext_modules = []

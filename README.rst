@@ -1,3 +1,12 @@
+Kivy on RaspberryPi
+===================
+In this fork, I try to implement the support for the RaspberryPi into Kivy.
+This is still a work in progress!
+
+I use the Python library rpi_vid_core from 
+https://bitbucket.org/bryancole/rpi_vid_core/overview. This package implements
+low-level access to GL and BCM functions.
+
 Kivy
 ====
 
