@@ -18,10 +18,15 @@ _c = egl._constants
         
 class WindowEglRpi(WindowBase):
     def create_window(self):
+        self._fakeMouseX = 0
+        self._fakeMouseY = 0
         bcm.host_init()
-        self.win = self._create_window(1280,800)
+        W,H = bcm.graphics_get_display_size(0)
+        self._size[0] = int(W)
+        self._size[1] = int(H)
+        self.win = self._create_window(self._size[0], self._size[1])
         self.dpy, self.surf, self.ctx = self._make_egl_context(self.win, 0)
-        glBindFramebuffer(0x8D40,0)
+        glBindFramebuffer(0x8D40,0) # 0x8D40 = GL_FRAMEBUFFER
         super(WindowEglRpi, self).create_window()
 
     def flip(self):
@@ -30,6 +35,12 @@ class WindowEglRpi(WindowBase):
         
     def _mainloop(self):
         EventLoop.idle()
+        
+        self.dispatch('on_mouse_move', self._fakeMouseX, self._fakeMouseY, self.modifiers)
+        self._fakeMouseX = self._fakeMouseX+1;
+        self._fakeMouseY = self._fakeMouseY+1;
+        
+        
     
     def mainloop(self):
         while not EventLoop.quit and EventLoop.status == 'started':
@@ -45,7 +56,6 @@ class WindowEglRpi(WindowBase):
                     pass
                     
     def _create_window(self, width, height):
-        W,H = bcm.graphics_get_display_size(0)
         W,H=width,height 
         dst = bcm.Rect(0,0,W,H)
         src = bcm.Rect(0,0,W<<16,H<<16)
